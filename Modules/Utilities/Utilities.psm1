@@ -37,6 +37,16 @@ Function Touch($FilePath) {
     }
 }
 
+# Copied from dahlbyk/posh-git
+Function Test-Administrator {
+    if (($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows) {
+        $currentUser = [Security.Principal.WindowsPrincipal]([Security.Principal.WindowsIdentity]::GetCurrent())
+        return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+
+    return 0 -eq (id -u)
+}
+
 Export-ModuleMember -Function @(
     "Edit-Profile",
     "Edit-Vimrc",
