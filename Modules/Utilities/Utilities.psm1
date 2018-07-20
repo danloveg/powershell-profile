@@ -24,4 +24,23 @@ Function Get-DiskUsage($dir=".") {
     }
 }
 
-Export-ModuleMember -Function "Edit-Profile", "Edit-Vimrc", "Get-MainProcesses", "Get-DiskUsage"
+# Credit to staxmanade/DevMachineSetup
+Function Touch($FilePath) {
+    If(Test-Path $FilePath) {
+        $File = Get-Item $FilePath;
+        $Now = Get-Date
+        $File.LastWriteTime = $Now
+    }
+    Else
+    {
+        "" | Out-File -FilePath $FilePath -Encoding ASCII
+    }
+}
+
+Export-ModuleMember -Function @(
+    "Edit-Profile",
+    "Edit-Vimrc",
+    "Get-MainProcesses",
+    "Get-DiskUsage",
+    "Touch"
+)
