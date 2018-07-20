@@ -10,7 +10,7 @@ If (-Not(Get-Module -ListAvailable -Name posh-git)) {
         Import-Module posh-git
         $PoshGitImported = $True
     } Else {
-        Write-Host "Must run as administrator to install posh-git."
+        Write-Host "Must run as administrator to install Git."
     }
 } Else {
     Import-Module posh-git
