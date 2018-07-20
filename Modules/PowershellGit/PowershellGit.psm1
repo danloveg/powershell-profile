@@ -1,10 +1,11 @@
 # Imports posh-git and edits the settings for it
 
+Import-Module Utilities
+
 [Bool] $PoshGitImported = $False
 
 If (-Not(Get-Module -ListAvailable -Name posh-git)) {
-    $user = [Security.Principal.WindowsIdentity]::GetCurrent()
-    If ((New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    If (Test-Administrator) {
         PowershellGet\Install-Module posh-git -Scope CurrentUser -Force
         Import-Module posh-git
         $PoshGitImported = $True
