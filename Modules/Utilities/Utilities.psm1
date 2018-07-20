@@ -52,5 +52,6 @@ Export-ModuleMember -Function @(
     "Edit-Vimrc",
     "Get-MainProcesses",
     "Get-DiskUsage",
-    "Touch"
+    "Touch",
+    "Test-Administrator"
 )
