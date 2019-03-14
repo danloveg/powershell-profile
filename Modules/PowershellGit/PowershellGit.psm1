@@ -1,4 +1,5 @@
 # Imports posh-git and edits the settings for it
+# If you do not have posh-git, this module installs it for you
 
 Import-Module Utilities
 
