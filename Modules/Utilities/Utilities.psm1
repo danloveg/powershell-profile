@@ -47,11 +47,25 @@ Function Test-Administrator {
     return 0 -eq (id -u)
 }
 
+Function Set-LocationLink($target) {
+    if($target.EndsWith(".lnk"))
+    {
+        $sh = new-object -com wscript.shell
+        $fullpath = resolve-path $target
+        $targetpath = $sh.CreateShortcut($fullpath).TargetPath
+        set-location $targetpath
+    }
+    else {
+        set-location $target
+    }
+}
+
 Export-ModuleMember -Function @(
     "Edit-Profile",
     "Edit-Vimrc",
     "Get-MainProcesses",
     "Get-DiskUsage",
     "Touch",
-    "Test-Administrator"
+    "Test-Administrator",
+    "Set-LocationLink"
 )
