@@ -4,7 +4,7 @@
 Import-Module Alias
 
 Function Edit-Profile {
-    vim $Profile
+    code "C:\Users\dlove\Google Drive\PowerShell\"
 }
 
 Function Edit-Vimrc {
@@ -37,16 +37,6 @@ Function Touch($FilePath) {
     }
 }
 
-# Copied from dahlbyk/posh-git
-Function Test-Administrator {
-    if (($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows) {
-        $currentUser = [Security.Principal.WindowsPrincipal]([Security.Principal.WindowsIdentity]::GetCurrent())
-        return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    }
-
-    return 0 -eq (id -u)
-}
-
 Function Set-LocationLink($target) {
     if($target.EndsWith(".lnk"))
     {
@@ -60,12 +50,38 @@ Function Set-LocationLink($target) {
     }
 }
 
+# Copied from dahlbyk/posh-git
+Function Test-Administrator {
+    if (($PSVersionTable.PSVersion.Major -le 5) -or $IsWindows) {
+        $currentUser = [Security.Principal.WindowsPrincipal]([Security.Principal.WindowsIdentity]::GetCurrent())
+        return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+
+    return 0 -eq (id -u)
+}
+
+Function Repair-Emulators {
+    # Removing .img files for Android emulators seems to make them work again
+    Get-ChildItem "C:\Users\dlove\.android\avd\*\*.img" | Remove-Item
+}
+
+Function Repair-Nexus7 {
+    Remove-Item "C:\Users\dlove\.android\avd\Nexus_7_API_25.avd\*.img"
+}
+
+Function Repair-Pixel {
+    Remove-Item "C:\Users\dlove\.android\avd\Pixel_API_26_V3.avd\*.img"
+}
+
 Export-ModuleMember -Function @(
     "Edit-Profile",
     "Edit-Vimrc",
     "Get-MainProcesses",
     "Get-DiskUsage",
     "Touch",
+    "Set-LocationLink",
     "Test-Administrator",
-    "Set-LocationLink"
+    "Repair-Emulators",
+    "Repair-Nexus7",
+    "Repair-Pixel"
 )

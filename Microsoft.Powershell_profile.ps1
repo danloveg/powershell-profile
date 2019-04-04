@@ -1,8 +1,11 @@
-# Powershell profile
+# Powershell Profile
 # Author: Daniel Lovegrove
 
 Import-Module Alias
-Import-Module WebServer
 Import-Module Utilities
-Import-Module PowershellGit
+Import-Module MyPowershellGit
+Import-Module WebServer
 
+If (Test-Administrator) {
+    $Host.UI.RawUI.ForegroundColor = "Red"
+}
