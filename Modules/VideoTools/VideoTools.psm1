@@ -75,7 +75,7 @@ Function Get-VideoCuts {
 
         Write-Host ("`nffmpeg -hide_banner -ss {0} -i {1} -t {2} {3}`n" -f $time[0], $video, $numSeconds, $currentOutputFileName) -ForegroundColor Green
 
-        ffmpeg -hide_banner -ss $time[0] -i $videoPath -t $numSeconds $currentOutputFileName
+        ffmpeg -hide_banner -ss $time[0] -i $video -t $numSeconds $currentOutputFileName
         $currentPart += 1
     }
 
