@@ -76,6 +76,12 @@ Function Get-VideoCuts {
         Write-Host ("`nffmpeg -hide_banner -ss {0} -i {1} -t {2} {3}`n" -f $time[0], $video, $numSeconds, $currentOutputFileName) -ForegroundColor Green
 
         ffmpeg -hide_banner -ss $time[0] -i $video -t $numSeconds $currentOutputFileName
+
+        If ($LASTEXITCODE -ne 0) {
+            Write-Host "FFmpeg ran into an error. Stopping."
+            return
+        }
+
         $currentPart += 1
     }
 }
