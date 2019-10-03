@@ -50,18 +50,18 @@ Function Get-VideoCuts {
     If (-Not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
         Write-Error "ffmpeg is not installed or accessible to PowerShell on the PATH."
         Write-Host "Visit https://ffmpeg.org for ffmpeg installation instructions."
-        return 1
+        return
     }
 
     If (-Not (Test-Path -Path $video -PathType Leaf)) {
         Write-Error ("File {0} does not exist." -f $video)
-        return 1
+        return
     }
 
     $fileExtension = [System.IO.Path]::GetExtension($video)
     If ([String]::IsNullOrEmpty($fileExtension)) {
         Write-Error "Video does not have a valid file extension."
-        return 1
+        return
     }
 
     $currentPart = $firstPart
@@ -78,8 +78,6 @@ Function Get-VideoCuts {
         ffmpeg -hide_banner -ss $time[0] -i $video -t $numSeconds $currentOutputFileName
         $currentPart += 1
     }
-
-    return 0
 }
 
 Export-ModuleMember -Function @(
