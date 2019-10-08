@@ -54,6 +54,10 @@ Function Get-VideoCuts {
         return
     }
 
+    If (-Not (VerifyTimes($timeList))) {
+        return
+    }
+
     If (-Not (Test-Path -Path $video -PathType Leaf)) {
         Write-Error ("File {0} does not exist." -f $video)
         return
@@ -103,6 +107,29 @@ Function Get-VideoCuts {
 
         $currentPart += 1
     }
+}
+
+Function VerifyTimes($timeList) {
+    ForEach ($time in $timeList) {
+        If (-Not ($time -is [Array])) {
+            Write-Host ("Timespan '{0}' is not an array." -f $time) -ForegroundColor Red
+            return $FALSE
+        }
+        If (-Not ($time.Length -eq 2)) {
+            Write-Host ("Timespan '{0}' does not have exactly two elements." -f $time) -ForegroundColor Red
+            return $FALSE
+        }
+        If (-Not ([String]$time[0] -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String]$time[0] -eq "START")) {
+            Write-Host ("The time '{0}' is not a valid format. Must be HH:mm:ss or START." -f $time[0]) -ForegroundColor Red
+            return $FALSE
+        }
+        If (-Not ([String]$time[1] -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String]$time[1] -eq "END")) {
+            Write-Host ("The time '{0}' is not a valid format. Must be HH:mm:ss or END." -f $time[1]) -ForegroundColor Red
+            return $FALSE
+        }
+    }
+
+    return $TRUE
 }
 
 
