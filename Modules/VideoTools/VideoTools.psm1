@@ -16,20 +16,21 @@ Function Get-VideoCuts {
     timestamps. Uses FFmpeg behind the scenes.
 
     .parameter video
-    The path to the video to cut up
+    The path to the video to cut up.
     .parameter timeList
-    An array of timestamps. Timestamps must be in the form @("HH:mm:ss", "HH:mm:ss"),
-    with the first time being the start time to start cutting and the second time'
-    being the end of the cut.
+    An array of timestamps. Timestamps should be in the form @("HH:mm:ss", "HH:mm:ss"),
+    with the first time being the start time to start cutting and the second time
+    being the end of the cut. The keywords START and END may be used for the start
+    and end time as well, respectively.
     .parameter firstPart
     The ID to give the first video. This value increments with each outputted
     slice/cut.
 
     .example
-    Get-VideoCuts -video "C:/path/to/video.mp4" -timeList @(@("00:00:00", "00:01:00"), @("00:03:00", "00:04:30"))
+    Get-VideoCuts -video "C:/path/to/video.mp4" -timeList @(@("START", "00:01:00"), @("00:03:00", "END"))
     This example creates two cut videos. The first video is a cut from the start of
-    the input video to one minute in. The second cut is from 3 minutes to 4 minutes
-    30 seconds.
+    the input video to one minute in. The second cut is from 3 minutes to the end of
+    the video.
     The path of the first cut video will be "C:/path/to/video_part01.mp4"
     The path of the second cut video will be "C:/path/to/video_part02.mp4"
 
@@ -70,21 +71,40 @@ Function Get-VideoCuts {
     ForEach ($time in $timeList) {
         $currentOutputFileName = ($fileName -f $currentPart)
 
-        $timeDiff = New-TimeSpan ([String] $time[0]) ([String] $time[1])
-        $numSeconds = $timeDiff.TotalSeconds
+        $command = "ffmpeg -hide_banner"
 
-        Write-Host ("`nffmpeg -hide_banner -ss {0} -i {1} -t {2} {3}`n" -f $time[0], $video, $numSeconds, $currentOutputFileName) -ForegroundColor Green
+        If ($time[0].equals("START")) {
+            $command = $command + " -ss 00:00:00"
+            $timeDiff = New-TimeSpan "00:00:00" ([String] $time[1])
+        } Else {
+            $command = $command + " -ss " + $time[0]
 
-        ffmpeg -hide_banner -ss $time[0] -i $video -t $numSeconds $currentOutputFileName
+            If (-Not($time[1].equals("END"))) {
+                $timeDiff = New-TimeSpan ([String] $time[0]) ([String] $time[1])
+            }
+        }
+
+        $command = $command + " -i " + $video
+
+        If (-Not ($time[1].equals("END"))) {
+            $command = $command + " -to " + $timeDiff.TotalSeconds
+        }
+
+        $command = $command + " " + $currentOutputFileName
+
+        Write-Host ("`n{0}`n" -f $command) -ForegroundColor Green
+
+        Invoke-Expression $command
 
         If ($LASTEXITCODE -ne 0) {
-            Write-Host "FFmpeg ran into an error. Stopping."
+            Write-Host "ffmpeg experienced error. Stopping."
             return
         }
 
         $currentPart += 1
     }
 }
+
 
 Export-ModuleMember -Function @(
     "Get-VideoCuts"
