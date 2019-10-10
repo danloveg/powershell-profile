@@ -60,10 +60,17 @@ Function Get-VideoCuts {
     .parameter video
     The path to the video to cut up.
     .parameter timeList
-    An array of timestamps. Timestamps should be in the form @("HH:mm:ss", "HH:mm:ss"),
-    with the first time being the start time to start cutting and the second time
-    being the end of the cut. The keywords START and END may be used for the start
-    and end time as well, respectively.
+    Can either be a path to a file containing timestamps, or an array of timestamps.
+    If the argument is an array of timestamps, the timestamps should be in the form
+    @("HH:mm:ss", "HH:mm:ss"), with the first time being the time to start cutting
+    from and the second time being the end of the cut. The keywords START and END
+    may be used for the start and end time as well, respectively.
+    If argument is a path to a file containing timestamps, the lines in the file
+    should be in the form:
+    HH:mm:ss HH:mm:ss
+    HH:mm:ss HH:mm:ss
+    And so on. The keywords START and END may be used here also. There should not be
+    a newline at the end of the file.
     .parameter firstPart
     The ID to give the first video. This value increments with each outputted
     slice/cut.
@@ -82,11 +89,23 @@ Function Get-VideoCuts {
     eleven minutes. Since the firstPart parameter was supplied, the ID of the cut
     will reflect this parameter.
     The path of the cut video will be "./video_part77.mp4"
-    #>
 
+    .example
+    Get-VideoCuts -video "video.mp4" -timeList times.txt -firstPart 2
+    Assuming that the file times.txt contains these contents with no empty lines:
+
+    START 00:00:23
+    00:00:23 00:00:46
+    00:00:46 END
+
+    This command would create three cuts according to the file contents.
+    The path of the first cut video will be video_part02.mp4
+    ...
+    The path of the third cut video will be video_part04.mp4
+    #>
     Param(
         [Parameter(Mandatory=$True)] [String] $video,
-        [Parameter(Mandatory=$True)] [Object[]] $timeList,
+        [Parameter(Mandatory=$True)] $timeList,
         [Int] $firstPart=1
     )
 
