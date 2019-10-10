@@ -115,7 +115,20 @@ Function Get-VideoCuts {
         return
     }
 
-    If (-Not (VerifyTimes($timeList))) {
+    If ($timeList -is [Object[]]) {
+        $times = $timeList
+    } ElseIf ($timeList -is [String] -And (Test-Path -Path $timeList -PathType Leaf)) {
+        $times = GetTimesFromFile($timeList)
+
+        If (-Not($times)) {
+            return
+        }
+    } Else {
+        Write-Host ("Parameter -timeList must be an array of times or a path to a file containing times.") -ForegroundColor Red
+        return
+    }
+
+    If (-Not (VerifyTimes($times))) {
         return
     }
 
@@ -135,7 +148,7 @@ Function Get-VideoCuts {
     $currentPart = $firstPart
     $fileName = $video.Replace($fileExtension, ('_part{0:D2}' + $fileExtension))
 
-    [VideoCutSpan[]] $cuts = ConvertTimesToCuts($timeList)
+    [VideoCutSpan[]] $cuts = ConvertTimesToCuts($times)
 
     ForEach ($cut in $cuts) {
         $currentOutputFileName = ($fileName -f $currentPart)
@@ -160,7 +173,31 @@ Function Get-VideoCuts {
     $endDate = Get-Date
     $totalTime = New-TimeSpan -Start $startDate -End $endDate
 
-    Write-Host ("`n`nTotal processing time: " + $totalTime.ToString("hh\:mm\:ss")) -ForegroundColor Green
+    Write-Host ("`nTotal processing time: " + $totalTime.ToString("hh\:mm\:ss")) -ForegroundColor Green
+}
+
+Function GetTimesFromFile($filePath) {
+    $fileContents = (Get-Content $filePath)
+
+    $times = @()
+    $lineNumber = 1
+    ForEach ($line in $fileContents) {
+        $split = $line -Split ' '
+
+        If ($split.Length -ne 2) {
+            $msg = "ERROR in file '{0}' (LINE {1}): '{2}' is invalid." -f $timeList, $lineNumber, $line
+            $msg = $msg + " Line must contain two times separated by a space."
+            Write-Host $msg -ForegroundColor Red
+            return $FALSE
+        }
+
+        $firstTime = $split[0] -Replace '\s', ''
+        $secondTime = $split[1] -Replace '\s', ''
+        $times += , @($firstTime, $secondTime)
+        $lineNumber += 1
+    }
+
+    return $times
 }
 
 Function ConvertTimesToCuts([Object[]] $timeList) {
