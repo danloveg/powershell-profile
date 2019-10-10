@@ -1,6 +1,7 @@
 # Tools to manipulate videos
 # Author: Daniel Lovegrove
 
+
 Class VideoCutSpan {
     [String] $startTime
     $cutSpan
@@ -15,7 +16,7 @@ Class VideoCutSpan {
         $this.cutSpan = $FALSE
 
         If (-Not($endTime.Equals("END"))) {
-            $timeDiff = New-TimeSpan $this.startTime $endTime
+            $timeDiff = New-TimeSpan -Start $this.startTime -End $endTime
 
             If ($timeDiff.TotalSeconds -le 0) {
                 Throw ("End time `"{0}`" was less than start time `"{1}`"" -f $endTime, $startTime)
@@ -104,6 +105,8 @@ Function Get-VideoCuts {
         return
     }
 
+    $startDate = Get-Date
+
     $fileExtension = [System.IO.Path]::GetExtension($video)
     If ([String]::IsNullOrEmpty($fileExtension)) {
         Write-Error "Video does not have a valid file extension."
@@ -134,6 +137,11 @@ Function Get-VideoCuts {
             return
         }
     }
+
+    $endDate = Get-Date
+    $totalTime = New-TimeSpan -Start $startDate -End $endDate
+
+    Write-Host ("`n`nTotal processing time: " + $totalTime.ToString("hh\:mm\:ss")) -ForegroundColor Green
 }
 
 Function ConvertTimesToCuts([Object[]] $timeList) {
