@@ -1,6 +1,47 @@
 # Tools to manipulate videos
 # Author: Daniel Lovegrove
 
+Class VideoCutSpan {
+    [String] $startTime
+    $cutSpan
+
+    VideoCutSpan([String] $startTime, [String] $endTime) {
+        If ($startTime -eq "START") {
+            $this.startTime = "00:00:00"
+        } Else {
+            $this.startTime = $startTime
+        }
+
+        $this.cutSpan = $FALSE
+
+        If (-Not($endTime.Equals("END"))) {
+            $timeDiff = New-TimeSpan $this.startTime $endTime
+
+            If ($timeDiff.TotalSeconds -le 0) {
+                Throw ("End time `"{0}`" was less than start time `"{1}`"" -f $endTime, $startTime)
+            }
+
+            $this.cutSpan = $timeDiff
+        }
+    }
+
+    [String] GetStartTime() {
+        return $this.startTime
+    }
+
+    [Boolean] HasDefinedLength() {
+        return ($this.cutSpan -ne $FALSE)
+    }
+
+    [Int32] GetLengthInSeconds() {
+        If ($this.cutSpan -eq $FALSE) {
+            return -1
+        }
+
+        return $this.cutSpan.TotalSeconds
+    }
+}
+
 Function Get-VideoCuts {
     <#
     .synopsis
