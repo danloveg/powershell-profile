@@ -113,28 +113,16 @@ Function Get-VideoCuts {
     $currentPart = $firstPart
     $fileName = $video.Replace($fileExtension, ('_part{0:D2}' + $fileExtension))
 
-    ForEach ($time in $timeList) {
+    [VideoCutSpan[]] $cuts = ConvertTimesToCuts($timeList)
+
+    ForEach ($cut in $cuts) {
         $currentOutputFileName = ($fileName -f $currentPart)
+        $currentPart += 1
 
-        $command = "ffmpeg -hide_banner"
-
-        If ($time[0].equals("START")) {
-            $command = $command + " -ss 00:00:00"
-            $timeDiff = New-TimeSpan "00:00:00" ([String] $time[1])
-        } Else {
-            $command = $command + " -ss " + $time[0]
-
-            If (-Not($time[1].equals("END"))) {
-                $timeDiff = New-TimeSpan ([String] $time[0]) ([String] $time[1])
-            }
+        $command = "ffmpeg -hide_banner -ss {0} -i {1}" -f $cut.GetStartTime(), $video
+        If ($cut.HasDefinedLength()) {
+            $command = $command + " -to " + $cut.GetLengthInSeconds()
         }
-
-        $command = $command + " -i " + $video
-
-        If (-Not ($time[1].equals("END"))) {
-            $command = $command + " -to " + $timeDiff.TotalSeconds
-        }
-
         $command = $command + " " + $currentOutputFileName
 
         Write-Host ("`n{0}`n" -f $command) -ForegroundColor Green
@@ -145,9 +133,17 @@ Function Get-VideoCuts {
             Write-Host "ffmpeg experienced error. Stopping."
             return
         }
-
-        $currentPart += 1
     }
+}
+
+Function ConvertTimesToCuts([Object[]] $timeList) {
+    $newArray = @(0) * $timeList.Length
+
+    For ($i = 0; $i -lt $timeList.Length; $i++) {
+        $newArray[$i] = [VideoCutSpan]::new($timeList[$i][0], $timeList[$i][1])
+    }
+
+    return $newArray
 }
 
 Function VerifyTimes($timeList) {
