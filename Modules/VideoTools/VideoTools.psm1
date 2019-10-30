@@ -1,5 +1,4 @@
-# Tools to manipulate videos
-# Author: Daniel Lovegrove
+using namespace System.Collections.Generic
 
 
 Class VideoCutSpan {
@@ -115,20 +114,8 @@ Function Get-VideoCuts {
         return
     }
 
-    If ($timeList -is [Object[]]) {
-        $times = $timeList
-    } ElseIf ($timeList -is [String] -And (Test-Path -Path $timeList -PathType Leaf)) {
-        $times = GetTimesFromFile($timeList)
-
-        If (-Not($times)) {
-            return
-        }
-    } Else {
-        Write-Host ("Parameter -timeList must be an array of times or a path to a file containing times.") -ForegroundColor Red
-        return
-    }
-
-    If (-Not (VerifyTimes($times))) {
+    $cuts = GetTimeCuts($timeList)
+    If (-Not($cuts)) {
         return
     }
 
@@ -147,8 +134,6 @@ Function Get-VideoCuts {
 
     $currentPart = $firstPart
     $fileName = $video.Replace($fileExtension, ('_part{0:D2}' + $fileExtension))
-
-    [VideoCutSpan[]] $cuts = ConvertTimesToCuts($times)
 
     ForEach ($cut in $cuts) {
         $currentOutputFileName = ($fileName -f $currentPart)
@@ -172,64 +157,137 @@ Function Get-VideoCuts {
 
     $endDate = Get-Date
     $totalTime = New-TimeSpan -Start $startDate -End $endDate
-
     Write-Host ("`nTotal processing time: " + $totalTime.ToString("hh\:mm\:ss")) -ForegroundColor Green
 }
 
-Function GetTimesFromFile($filePath) {
-    $fileContents = (Get-Content $filePath)
+Function GetTimeCuts($timeListArg) {
+    $cuts = $NULL
 
-    $times = @()
-    $lineNumber = 1
-    ForEach ($line in $fileContents) {
-        $split = $line -Split ' '
+    If ($timeListArg -is [Object[]]) {
+        $cuts = GetCutsFromArray($timeListArg)
+    }
+    ElseIf ($timeListArg -is [String] -And (Test-Path -Path $timeListArg -PathType Leaf)) {
+        $cuts = GetCutsFromFile($timeListArg)
+    }
+    ElseIf ($timeListArg -is [String]) {
+        $cuts = GetCutsFromString($timeListArg)
+    }
+    Else {
+        Write-Host ("Parameter -timeList must be a single time string, and array of times, or a path to a file containing times.") -ForegroundColor Red
+    }
 
-        If ($split.Length -ne 2) {
-            $msg = "ERROR in file '{0}' (LINE {1}): '{2}' is invalid." -f $timeList, $lineNumber, $line
-            $msg = $msg + " Line must contain two times separated by a space."
-            Write-Host $msg -ForegroundColor Red
-            return $FALSE
+    return $cuts
+}
+
+
+Function GetCutsFromArray($times) {
+    $videoCuts = [List[VideoCutSpan]]::new()
+
+    ForEach ($time in $times) {
+        If (-Not ($time -is [Array])) {
+            Write-Host "ERROR in input. '$time' is not an Array." -ForegroundColor Red
+            return $NULL
+        }
+        If ($time.Count -ne 2) {
+            Write-Host "ERROR in input. '$time' does not have two elements." -ForegroundColor Red
+            return $NULL
         }
 
-        $firstTime = $split[0] -Replace '\s', ''
-        $secondTime = $split[1] -Replace '\s', ''
-        $times += , @($firstTime, $secondTime)
+        $startTime = $time[0]
+        $endTime = $time[1]
+
+        If (-Not (StartTimeIsValid($firstTime))) {
+            return $NULL
+        }
+        If (-Not (EndTimeIsValid($secondTime))) {
+            return $NULL
+        }
+
+        $cut = [VideoCutSpan]::new($startTime, $endTime)
+        $videoCuts.Add($cut)
+    }
+
+    return $videoCuts
+}
+
+Function GetCutsFromFile($filePath) {
+    $fileContents = (Get-Content $filePath)
+
+    $videoCuts = [List[VideoCutSpan]]::new()
+
+    $lineNumber = 1
+    ForEach ($line in $fileContents) {
+        If (-Not([String]::IsNullOrWhiteSpace($line))) {
+            $split = $line -Split ' '
+
+            If ($split.Length -ne 2) {
+                $msg = "ERROR in file '{0}' (LINE {1}): '{2}' is invalid." -f $filePath, $lineNumber, $line
+                $msg = $msg + " Line must contain two times separated by a space."
+                Write-Host $msg -ForegroundColor Red
+                return $NULL
+            }
+
+            $firstTime = $split[0] -Replace '\s', ''
+            $secondTime = $split[1] -Replace '\s', ''
+
+            If (-Not (StartTimeIsValid($firstTime))) {
+                return $NULL
+            }
+            If (-Not (EndTimeIsValid($secondTime))) {
+                return $NULL
+            }
+
+            $cut = [VideoCutSpan]::new($firstTime, $secondTime)
+
+            $videoCuts.Add($cut)
+        }
+
         $lineNumber += 1
     }
 
-    return $times
+    return $videoCuts
 }
 
-Function ConvertTimesToCuts([Object[]] $timeList) {
-    $newArray = @(0) * $timeList.Length
+Function GetCutsFromString($time) {
+    $videoCuts = [List[VideoCutSpan]]::new()
 
-    For ($i = 0; $i -lt $timeList.Length; $i++) {
-        $newArray[$i] = [VideoCutSpan]::new($timeList[$i][0], $timeList[$i][1])
+    $split = $time -Split ' '
+
+    If ($split.Length -ne 2) {
+        Write-Host "ERROR in input. String must contain two times separated by a space." -ForegroundColor Red
+        return $NULL
     }
 
-    return $newArray
+    $firstTime = $split[0] -Replace '\s', ''
+    $secondTime = $split[1] -Replace '\s', ''
+
+    If (-Not (StartTimeIsValid($firstTime))) {
+        return $NULL
+    }
+    If (-Not (EndTimeIsValid($secondTime))) {
+        return $NULL
+    }
+
+    $cut = [VideoCutSpan]::new($firstTime, $secondTime)
+
+    $videoCuts.Add($cut)
+
+    return $videoCuts
 }
 
-Function VerifyTimes($timeList) {
-    ForEach ($time in $timeList) {
-        If (-Not ($time -is [Array])) {
-            Write-Host ("Timespan '{0}' is not an array." -f $time) -ForegroundColor Red
-            return $FALSE
-        }
-        If (-Not ($time.Length -eq 2)) {
-            Write-Host ("Timespan '{0}' does not have exactly two elements." -f $time) -ForegroundColor Red
-            return $FALSE
-        }
-        If (-Not ([String]$time[0] -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String]$time[0] -eq "START")) {
-            Write-Host ("The time '{0}' is not a valid format. Must be HH:mm:ss or START." -f $time[0]) -ForegroundColor Red
-            return $FALSE
-        }
-        If (-Not ([String]$time[1] -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String]$time[1] -eq "END")) {
-            Write-Host ("The time '{0}' is not a valid format. Must be HH:mm:ss or END." -f $time[1]) -ForegroundColor Red
-            return $FALSE
-        }
+Function StartTimeIsValid($startTime) {
+    If (-Not ([String] $startTime -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String] $startTime -eq "START")) {
+        Write-Host ("The time '{0}' is not a valid start time. Must be HH:mm:ss or START." -f $time[0]) -ForegroundColor Red
+        return $FALSE
     }
+    return $TRUE
+}
 
+Function EndTimeIsValid($endTime) {
+    If (-Not ([String] $endTime -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String] $endTime -eq "START")) {
+        Write-Host ("The time '{0}' is not a valid end time. Must be HH:mm:ss or END." -f $time[0]) -ForegroundColor Red
+        return $FALSE
+    }
     return $TRUE
 }
 
