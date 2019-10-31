@@ -277,15 +277,15 @@ Function GetCutsFromString($time) {
 
 Function StartTimeIsValid($startTime) {
     If (-Not ([String] $startTime -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String] $startTime -eq "START")) {
-        Write-Host ("The time '{0}' is not a valid start time. Must be HH:mm:ss or START." -f $time[0]) -ForegroundColor Red
+        Write-Host ("The time '{0}' is not a valid start time. Must be HH:mm:ss or START." -f $startTime) -ForegroundColor Red
         return $FALSE
     }
     return $TRUE
 }
 
 Function EndTimeIsValid($endTime) {
-    If (-Not ([String] $endTime -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String] $endTime -eq "START")) {
-        Write-Host ("The time '{0}' is not a valid end time. Must be HH:mm:ss or END." -f $time[0]) -ForegroundColor Red
+    If (-Not ([String] $endTime -Match "\d\d:[0-5][0-9]:[0-5][0-9]" -Or [String] $endTime -eq "END")) {
+        Write-Host ("The time '{0}' is not a valid end time. Must be HH:mm:ss or END." -f $endTime) -ForegroundColor Red
         return $FALSE
     }
     return $TRUE
