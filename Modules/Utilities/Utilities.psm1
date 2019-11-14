@@ -12,8 +12,45 @@ Function Get-DiskUsage($dir=".") {
         $FirstItem = $_;
         Get-ChildItem -Recurse $_.FullName |
         Measure-Object -Property Length -Sum |
-        Select-Object @{Name="Name";Expression={$FirstItem}}, Sum
+        Select-Object @{Name="Name";Expression={$FirstItem}}, Sum |
+        ConvertTo-HumanReadableSize
     }
+}
+
+Function ConvertTo-HumanReadableSize {
+    Param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)] [Object[]] $diskUsages
+    )
+
+    BEGIN {}
+
+    PROCESS {
+        ForEach ($usage in $diskUsages) {
+            $bytes = $usage.Sum
+            $kilobytes = $bytes / 1kb
+            $megabytes = $bytes / 1mb
+            $gigabytes = $bytes / 1gb
+
+            $humanReadableSize = ""
+
+            If ($kilobytes -lt 1) {
+                $humanReadableSize = ("{0}.00  B" -f $bytes).PadLeft(10)
+            }
+            ElseIf ($megabytes -lt 1) {
+                $humanReadableSize = ("{0:N2} KB" -f $kilobytes).PadLeft(10)
+            }
+            ElseIf ($gigabytes -lt 1) {
+                $humanReadableSize = ("{0:N2} MB" -f $megabytes).PadLeft(10)
+            }
+            Else {
+                $humanReadableSize = ("{0:N2} GB" -f $gigabytes).PadLeft(10)
+            }
+
+            [PsCustomObject]@{'Name' = $usage.Name; 'FileSize' = $humanReadableSize}
+        }
+    }
+
+    END {}
 }
 
 # Credit to staxmanade/DevMachineSetup
