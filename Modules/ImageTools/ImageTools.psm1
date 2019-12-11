@@ -1,13 +1,13 @@
 Function Get-ImageSizes {
     [CmdletBinding()]
-    Param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
-        [String[]] $images
-    )
+	Param (
+		[Parameter(Mandatory=$True, ValueFromPipeline=$True)]
+		[String[]] $images
+	)
 
     BEGIN {}
 
-    PROCESS {
+    PROCESS{
         ForEach ($image in $images) {
             magick identify -quiet -format "%f: %Wx%H`n" $image
         }
@@ -29,23 +29,26 @@ Function ConvertAndCombineImagesToPDF([String[]] $images, [String] $uniformWidth
             Continue
         }
 
-        Write-Host ("Resizing image to width {0}." -f $uniformWidth)
-        magick mogrify -quiet -resize "$($newWidth)x" $image
+        $width = magick identify -quiet -format "%W" $image
+        If ($width -ne $uniformWidth) {
+            Write-Host ("Resizing image to width {0}." -f $uniformWidth)
+            magick mogrify -quiet -resize "$($uniformWidth)x" $image
+        }
 
         $jpg = $NULL
         If ($imageExtension -ne ".jpg") {
             Write-Host "Converting image to intermediate JPG."
             $jpg = $image.Replace($imageExtension, '.jpg')
-            magick convert $image $jpg
+            magick convert -quiet $image $jpg
         }
 
         Write-Host "Converting to PDF."
         $pdf = $image.Replace($imageExtension, '.pdf')
         If ($NULL -ne $jpg) {
-            magick convert $jpg $pdf
+            magick convert -quiet $jpg $pdf
         }
         Else {
-            magick convert $image $pdf
+            magick convert -quiet $image $pdf
         }
         $convertedPDFs += $pdf
 
@@ -58,8 +61,8 @@ Function ConvertAndCombineImagesToPDF([String[]] $images, [String] $uniformWidth
         Write-Host
     }
 
-    Write-Host ("Combining PDFs, outputting to {0}." -f $outputPath)
-    pdftk $convertedPDFs cat output $outputPath
+    Write-Host ("Combining PDFs with qpdf, outputting to {0}." -f $outputPath)
+    qpdf --empty --pages $convertedPDFs -- $outputPath
     Write-Host ("`nDone.") -ForegroundColor Green
 }
 
