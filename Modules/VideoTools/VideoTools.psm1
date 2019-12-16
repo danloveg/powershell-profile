@@ -196,10 +196,10 @@ Function GetCutsFromArray($times) {
         $startTime = $time[0]
         $endTime = $time[1]
 
-        If (-Not (StartTimeIsValid($firstTime))) {
+        If (-Not (StartTimeIsValid($startTime))) {
             return $NULL
         }
-        If (-Not (EndTimeIsValid($secondTime))) {
+        If (-Not (EndTimeIsValid($endTime))) {
             return $NULL
         }
 
