@@ -3,13 +3,13 @@ using System;
 
 public class ISOFile  
 {
-    public unsafe static void Create(string Path, object Stream, int BlockSize, int TotalBlocks)
+    public unsafe static void Create(string OutputPath, object InputStream, int BlockSize, int TotalBlocks)
     {
         int bytes = 0;
         byte[] buf = new byte[BlockSize];
         var ptr = (System.IntPtr)(&bytes);
-        var output = System.IO.File.OpenWrite(Path);
-        var input = Stream as System.Runtime.InteropServices.ComTypes.IStream;
+        var output = System.IO.File.OpenWrite(OutputPath);
+        var input = InputStream as System.Runtime.InteropServices.ComTypes.IStream;
 
         int percentComplete = 0;
         int lastPercentWritten = -1;
