@@ -8,32 +8,31 @@ public class ISOFile
         int bytes = 0;
         byte[] buf = new byte[BlockSize];
         var ptr = (System.IntPtr)(&bytes);
-        var o = System.IO.File.OpenWrite(Path);
-        var i = Stream as System.Runtime.InteropServices.ComTypes.IStream;
+        var output = System.IO.File.OpenWrite(Path);
+        var input = Stream as System.Runtime.InteropServices.ComTypes.IStream;
 
         int percentComplete = 0;
         int lastPercentWritten = -1;
         int blocksWritten = 0;
-        int numBlocks = TotalBlocks;
 
         if (o != null)
         {
-            while (TotalBlocks-- > 0)
+            for (int i = 0; i < TotalBlocks; i++)
             {
-                i.Read(buf, BlockSize, ptr);
-                o.Write(buf, 0, bytes);
+                input.Read(buf, BlockSize, ptr);
+                output.Write(buf, 0, bytes);
 
                 // Tracks progress
                 blocksWritten++;
-                percentComplete = (int) Math.Round((double) blocksWritten * 100 / numBlocks);
+                percentComplete = (int) Math.Round((double) blocksWritten * 100 / TotalBlocks);
                 if (percentComplete != lastPercentWritten)
                 {
                     Console.Write(String.Format("{0} %\r", percentComplete).PadLeft(6));
                     lastPercentWritten = percentComplete;
                 }
             }
-            o.Flush();
-            o.Close();
+            output.Flush();
+            output.Close();
             Console.WriteLine();
         }
     }
