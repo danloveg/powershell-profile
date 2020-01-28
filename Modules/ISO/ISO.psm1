@@ -14,25 +14,28 @@ public class ISOFile
         int percentComplete = 0;
         int lastPercentWritten = -1;
 
-        if (o != null)
+        if (output == null)
         {
-            for (int i = 0; i < TotalBlocks; i++)
-            {
-                input.Read(buf, BlockSize, ptr);
-                output.Write(buf, 0, bytes);
-
-                // Tracks progress
-                percentComplete = (int) Math.Round((double) (i + 1) * 100 / TotalBlocks);
-                if (percentComplete != lastPercentWritten)
-                {
-                    Console.Write(String.Format("{0} %\r", percentComplete).PadLeft(6));
-                    lastPercentWritten = percentComplete;
-                }
-            }
-            output.Flush();
-            output.Close();
-            Console.WriteLine();
+            return
         }
+
+        for (int i = 0; i < TotalBlocks; i++)
+        {
+            input.Read(buf, BlockSize, ptr);
+            output.Write(buf, 0, bytes);
+
+            // Tracks progress
+            percentComplete = (int) Math.Round((double) (i + 1) * 100 / TotalBlocks);
+            if (percentComplete != lastPercentWritten)
+            {
+                Console.Write(String.Format("{0} %\r", percentComplete).PadLeft(6));
+                lastPercentWritten = percentComplete;
+            }
+        }
+
+        output.Flush();
+        output.Close();
+        Console.WriteLine();
     }
 }
 "@
