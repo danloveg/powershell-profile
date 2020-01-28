@@ -13,7 +13,6 @@ public class ISOFile
 
         int percentComplete = 0;
         int lastPercentWritten = -1;
-        int blocksWritten = 0;
 
         if (o != null)
         {
@@ -23,8 +22,7 @@ public class ISOFile
                 output.Write(buf, 0, bytes);
 
                 // Tracks progress
-                blocksWritten++;
-                percentComplete = (int) Math.Round((double) blocksWritten * 100 / TotalBlocks);
+                percentComplete = (int) Math.Round((double) (i + 1) * 100 / TotalBlocks);
                 if (percentComplete != lastPercentWritten)
                 {
                     Console.Write(String.Format("{0} %\r", percentComplete).PadLeft(6));
