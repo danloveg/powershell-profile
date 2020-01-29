@@ -64,7 +64,11 @@ Function ConvertAndCombineImagesToPDF {
 
     BEGIN {
         If ($Width -And -Not($Width -Match '^\d+$')) {
-            Write-Host "Width `"$($Width)`" is not a number." -ForegroundColor Red
+            Write-Host "Width `"$($Width)`" is not a positive number." -ForegroundColor Red
+            return
+        }
+        ElseIf ($Width -eq "0") {
+            Write-Host "Width cannot be zero." -ForegroundColor Red
             return
         }
 
