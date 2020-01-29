@@ -73,31 +73,31 @@ Function ConvertAndCombineImagesToPDF {
 
     PROCESS {
         ForEach ($image in $Images) {
-            Write-Host ("Processing {0}" -f $image)
+            Write-Verbose ("Processing {0}" -f $image)
             $imageExtension = [System.IO.Path]::GetExtension($image)
 
             If ($imageExtension -eq ".pdf") {
                 $convertedPDFs += $image
-                Write-Host ("File is already in PDF format.`n")
+                Write-Verbose ("File is already in PDF format.`n")
                 Continue
             }
 
             If ($Width) {
                 $imageWidth = magick identify -quiet -format "%W" $image
                 If ($imageWidth -ne $Width) {
-                    Write-Host ("Resizing image to width {0}." -f $Width)
+                    Write-Verbose ("Resizing image to width {0}." -f $Width)
                     magick mogrify -quiet -resize "$($Width)x" $image
                 }
             }
 
             $jpg = $NULL
             If ($imageExtension -ne ".jpg") {
-                Write-Host "Converting image to intermediate JPG."
+                Write-Verbose "Converting image to intermediate JPG."
                 $jpg = $image.Replace($imageExtension, '.jpg')
                 magick convert -quiet $image $jpg
             }
 
-            Write-Host "Converting to PDF."
+            Write-Verbose "Converting to PDF."
             $pdf = $image.Replace($imageExtension, '.pdf')
             If ($NULL -ne $jpg) {
                 magick convert -quiet $jpg $pdf
@@ -108,21 +108,21 @@ Function ConvertAndCombineImagesToPDF {
             $convertedPDFs += $pdf
 
             If (-Not $KeepAll) {
-                Write-Host "Cleaning up files."
+                Write-Verbose "Cleaning up files."
                 If ($NULL -ne $jpg) {
                     Remove-Item $jpg
                 }
                 Remove-Item $image
             }
-
-            Write-Host
         }
     }
 
     END {
-        Write-Host ("Combining PDFs with qpdf, outputting to {0}." -f $OutputPath)
+        Write-Verbose ("Combining PDFs with qpdf, outputting to {0}." -f $OutputPath)
         qpdf --empty --pages $convertedPDFs -- $OutputPath
-        Write-Host ("`nDone.") -ForegroundColor Green
+        Write-Verbose ("`nDone.")
+        $item = Get-Item $OutputPath
+        $item
     }
 }
 
