@@ -124,7 +124,6 @@ Function ConvertAndCombineImagesToPDF {
     END {
         Write-Verbose ("Combining PDFs with qpdf, outputting to {0}." -f $OutputPath)
         qpdf --empty --pages $convertedPDFs -- $OutputPath
-        Write-Verbose ("`nDone.")
         $item = Get-Item $OutputPath
         $item
     }
