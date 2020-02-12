@@ -58,6 +58,7 @@ Function ConvertAndCombineImagesToPDF {
     Param(
         [Parameter(Mandatory=$True, ValueFromPipeline=$True)] [String[]] $Images,
         [Parameter(Mandatory=$False)] [String] $Width,
+        [Parameter(Mandatory=$False)] [String] $JpegQuality,
         [Parameter(Mandatory=$True)] [String] $OutputPath,
         [Parameter(Mandatory=$False)] [Switch] $KeepAll
     )
@@ -70,6 +71,18 @@ Function ConvertAndCombineImagesToPDF {
         ElseIf ($Width -eq "0") {
             Write-Host "Width cannot be zero." -ForegroundColor Red
             return
+        }
+
+        If ($JpegQuality -And -Not($JpegQuality -Match '^\d+$')) {
+            Write-Host "JpegQuality `"$($JpegQuality)`" is not a positive number." -ForegroundColor Red
+            return
+        }
+        ElseIf ($JpegQuality) {
+            $quality = $JpegQuality -as [Int32]
+            If ($quality -lt 0 -Or $quality -gt 100) {
+                Write-Host "Quality must be between 0 and 100 (inclusive)" -ForegroundColor Red
+                return
+            }
         }
 
         $convertedPDFs = @()
@@ -98,7 +111,12 @@ Function ConvertAndCombineImagesToPDF {
             If ($imageExtension -ne ".jpg") {
                 Write-Verbose "Converting image to intermediate JPG."
                 $jpg = $image.Replace($imageExtension, '.jpg')
-                magick convert -quiet $image $jpg
+                If ($JpegQuality) {
+                    magick convert -quiet $image -quality $JpegQuality $jpg
+                }
+                Else {
+                    magick convert -quiet $image $jpg
+                }
             }
 
             Write-Verbose "Converting to PDF."
