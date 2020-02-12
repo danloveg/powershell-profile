@@ -36,6 +36,9 @@ Function ConvertAndCombineImagesToPDF {
     .parameter Width
     Determines the width each image will be resized to before converting to PDF. The point of
     specifying a width is to improve the viewing experience of the output PDF in a PDF reader.
+    .parameter JpegQuality
+    Set the quality value ImageMagick uses to convert images to jpeg. Value can be 0 to 100, 0
+    being the lowest quality. Lower quality images use less storage.
     .parameter OutputPath
     The path to the combined output PDF.
     .parameter KeepAll
@@ -43,11 +46,10 @@ Function ConvertAndCombineImagesToPDF {
     conversion. If -KeepAll is specified, nothing is deleted.
 
     .example
-    Combine the following tif images into a PDF called final.pdf with a uniform width of 4000px:
-    page1.tif (4300x3000)
-    page2.tif (4000x3000)
+    Combine two TIFF images into a PDF called final.pdf with a uniform width of 4000px and a
+    quality of 75:
 
-    ConvertAndCombineImagesToPDF -Images @("page1.tif", "page2.tif") -Width 4000 -OutputPath final.pdf
+    ConvertAndCombineImagesToPDF -Images @("page1.tif", "page2.tif") -Width 4000 -JpegQuality 75 -OutputPath final.pdf
 
     .example
     Combine all jpgs in this folder to a pdf called combined.pdf, and keep all of the files:
