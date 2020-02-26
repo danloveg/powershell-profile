@@ -9,7 +9,7 @@ Function Get-ImageSizes {
 
     PROCESS{
         ForEach ($image in $images) {
-            $data = magick identify -quiet -format "%f|%W|%H`n" $image
+            $data = magick identify -quiet -format '%f|%W|%H' $image
 
             $dataSplit = ([String] $data).Split('|')
 
