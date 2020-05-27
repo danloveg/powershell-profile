@@ -7,12 +7,60 @@ Function Get-MainProcesses {
     Get-Process | Where-Object {$_.MainWindowTitle} | Format-Table Id, Name, MainWindowTitle -autosize
 }
 
-Function Get-DiskUsage($dir=".") {
-    Get-ChildItem $dir | ForEach-Object {
-        $FirstItem = $_;
-        Get-ChildItem -Recurse $_.FullName |
-        Measure-Object -Property Length -Sum |
-        Select-Object @{Name="Name";Expression={$FirstItem}}, Sum |
+Function Get-FileSize($File) {
+    $Size = (Get-Item $File).Length
+    [PsCustomObject] @{Sum=$Size}
+}
+
+Function Get-FolderSize($Folder) {
+    $Files = Get-ChildItem -Path $Folder -File -Recurse
+    If (-Not($Files)) {
+        [PsCustomObject] @{Sum=0}
+    }
+    Else {
+        $Size = 0
+        ForEach ($File in $Files) {
+            $Size += (Get-FileSize $File).Sum
+        }
+        [PsCustomObject] @{Sum=$Size}
+    }
+}
+
+Function Get-DiskUsage {
+    Param(
+        [Parameter(Mandatory=$True)]
+        [ValidateScript({
+            If (-Not (Test-Path -Path $_ -ErrorAction SilentlyContinue)) {
+                throw "Target `"$_`" does not exist"
+            }
+            Else {
+                return $True
+            }
+        })]
+        [String]
+        $Target
+    )
+
+    If (Test-Path -Path $Target -PathType Container -ErrorAction SilentlyContinue) {
+        $TopLevelItems = Get-ChildItem $Target
+
+        ForEach ($Item in $TopLevelItems) {
+            If (Test-Path -Path $Item -PathType Leaf -ErrorAction SilentlyContinue) {
+                Get-FileSize $Item |
+                Select-Object Sum, @{Name='Name';Expression={$Item.Name}} |
+                ConvertTo-HumanReadableSize
+            }
+            Else {
+                Get-FolderSize $Item |
+                Select-Object Sum, @{Name='Name';Expression={$Item.Name}} |
+                ConvertTo-HumanReadableSize
+            }
+        }
+    }
+    Else {
+        $TargetItem = Get-Item $Target
+        Get-FileSize $TargetItem |
+        Select-Object Sum, @{Name='Name';Expression={$TargetItem.Name}} |
         ConvertTo-HumanReadableSize
     }
 }
